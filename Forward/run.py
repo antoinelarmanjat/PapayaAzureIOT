@@ -1,36 +1,19 @@
-import os,sys
+import os, sys
 import json
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "env/Lib/site-packages")))
+# adding the shared libraries path, must be done before the libraries are imported
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "Lib")))
+# shared libraries
+from repository import repository
+from papaya import papaya
 
-import pydocumentdb.document_client as document_client
-import requests
+with open(os.environ["inputMessage"]) as msg:
+    event = json.loads(msg.read())
 
+papayaId, papayaToken = repository.resolve(event["deviceId"])
 
-inputMessage = open(os.environ["inputMessage"]).read()
-event = json.loads(inputMessage)
+payload = { "Urgent": False, "Unit": "washstop", "Amount": "%.1f" % event["totalpoweroutput"] }
 
-docDBHost = os.environ["docDBHost"]
-docDBKey  = os.environ["docDBKey"]
+response = papaya.update(papayaId, papayaToken, payload)
 
-client = document_client.DocumentClient(
-    docDBHost, {"masterKey": docDBKey})
-
-docs = list(client.QueryDocuments("dbs/devices/colls/deviceInfo", 
-    "SELECT c.papayaId, c.papayaToken FROM c WHERE c.deviceId = '" + event["deviceid"] + "'"))
-
-if len(docs) > 0:
-    for doc in docs:
-        h = {
-            "Authorization": doc["papayaToken"], 
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache"
-        }
-        p = {
-            "Urgent": False,
-            "Unit": "washstop",
-            "Amount": "%.1f" % event["totalpoweroutput"]
-        }
-        r = requests.post("https://www.papayagogo.com/%s/event" % doc["papayaId"], 
-            headers=h, data=json.dumps(p))
-        print r.text
+print response.text
