@@ -3,7 +3,6 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "env/Lib/site-packages")))
 
-import pydocumentdb.documents as documents
 import pydocumentdb.document_client as document_client
 import requests
 
