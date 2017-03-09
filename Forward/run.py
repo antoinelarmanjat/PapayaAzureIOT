@@ -10,7 +10,8 @@ from papaya import papaya
 with open(os.environ["inputMessage"]) as msg:
     event = json.loads(msg.read())
 
-papayaId, papayaToken = repository.resolve(event["deviceId"])
+# TODO ME handle case insensitive lookup for the event
+papayaId, papayaToken = repository.resolve(event["deviceid"])
 
 payload = { "Urgent": False, "Unit": "washstop", "Amount": "%.1f" % event["totalpoweroutput"] }
 
