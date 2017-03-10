@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import random
@@ -16,5 +17,6 @@ devices = repository.list_devices()
 for id, pk in devices:
     currWindSpeed = AVG_WINDSPEED + random.random() * 4 - 2
     currPowerOutput = AVG_POWEROUTPUT + random.random() * 200 - 100
-    event = {"deviceId": id, "windSpeed": currWindSpeed, "powerOutput": currPowerOutput}
-    iothub.emit(id, pk, json.dumps(event))
+    now = "%s" % datetime.datetime.now()
+    event = {"deviceId": id, "windSpeed": currWindSpeed, "powerOutput": currPowerOutput, "eventDate": now}
+    iothub.emit_message(id, json.dumps(event))

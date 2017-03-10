@@ -10,17 +10,16 @@ from iothub import iothub
 from papaya import papaya
 from repository import repository
 
-print os.environ["REQ_QUERY_CODE"]
-
 with open(os.environ["REQ"]) as req:
     details = json.loads(req.read())
 
-did, dpk = iothub.add(uuid.uuid4())
+# first register the device with the Azure IoT Hub
+did, dpk = iothub.add_device(uuid.uuid4())
+# then inform Papaya about the device
 pid, ptk = papaya.register(did)
-
+# extend the device details with Papaya & Azure ids
 details["deviceId"] = did
-details["devicePrimaryKey"] = dpk
 details["papayaId"] = pid
 details["papayaToken"] = ptk
-
+# finally insert the full details in Azure Document DB
 repository.insert(did, details)

@@ -9,11 +9,7 @@ class Papaya:
         pass
 
     def update(self, id, token, payload):
-        headers = {
-            "Authorization": token,
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache"
-        }
+        headers = { "Authorization": token, "Content-Type": "application/json", "Cache-Control": "no-cache" }
         return requests.post("https://www.papayagogo.com/%s/event" % id, headers=headers, data=json.dumps(payload))
 
 papaya = Papaya()
