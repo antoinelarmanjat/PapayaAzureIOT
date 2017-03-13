@@ -18,7 +18,7 @@ did = uuid.uuid4()
 # first register the device with the Azure IoT Hub
 rtext, rcode = iothub.add_device(did)
 # then inform Papaya about the device
-pid, ptk = papaya.register(did, details["payerId"], details["payeeId"], details["payeeToken"])
+pid, ptk = papaya.register(did, details["devicePublicKey"], details["payerId"], details["payeeId"], details["payeeToken"])
 # extend the device details with Papaya & Azure ids
 details["deviceId"] = did
 details["papayaId"] = pid
