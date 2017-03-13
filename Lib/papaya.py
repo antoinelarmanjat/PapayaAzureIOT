@@ -11,8 +11,10 @@ class Papaya:
     def register(self, deviceId, devicePublicKey, payerId, payeeId, payeeToken):
         headers = { "Authorization": payeeToken, "Content-Type": "application/json", "Cache-Control": "no-cache" }
         payload = { "ExternalId": deviceId, "PublicKey": devicePublicKey, "DeviceType": "WindTurbine"}
-        return requests.post("https://www.papayagogo.com/%s/%s/devices" % (payeeId, payerId),
+        r = requests.post("https://www.papayagogo.com/%s/%s/devices" % (payeeId, payerId),
             headers=headers, data=json.dumps(payload))
+        print r.text
+        return r
 
     def update(self, id, token, payload):
         headers = { "Authorization": token, "Content-Type": "application/json", "Cache-Control": "no-cache" }
