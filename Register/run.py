@@ -14,7 +14,7 @@ with open(os.environ["REQ"]) as req:
     details = json.loads(req.read())
 
 # random device id
-did = uuid.uuid4()
+did = str(uuid.uuid4())
 # first register the device with the Azure IoT Hub
 print "Registering %s with the Azure IoTHub" % did
 rtext, rcode = iothub.add_device(did)
