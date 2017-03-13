@@ -1,3 +1,6 @@
+# adding the virtual env path, must be done before the libraries are imported
+import envsetup
+
 import base64
 import hashlib
 import hmac
