@@ -18,5 +18,6 @@ for device in devices:
     currWindSpeed = AVG_WINDSPEED + random.random() * 4 - 2
     currPowerOutput = AVG_POWEROUTPUT + random.random() * 200 - 100
     now = "%s" % datetime.datetime.now()
-    event = {"deviceId": device["deviceId"], "windSpeed": currWindSpeed, "powerOutput": currPowerOutput, "eventDate": now}
-    print iothub.emit_message(id, json.dumps(event))
+    did = device["deviceId"]
+    event = {"deviceId": did, "windSpeed": currWindSpeed, "powerOutput": currPowerOutput, "eventDate": now}
+    print iothub.emit_message(did, json.dumps(event))
