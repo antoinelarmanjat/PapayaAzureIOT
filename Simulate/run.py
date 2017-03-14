@@ -13,6 +13,7 @@ AVG_WINDSPEED = 10 # m/s
 AVG_POWEROUTPUT = 800 #kW
 
 devices = iothub.list_devices()
+print devices
 for id, pk in devices:
     currWindSpeed = AVG_WINDSPEED + random.random() * 4 - 2
     currPowerOutput = AVG_POWEROUTPUT + random.random() * 200 - 100
