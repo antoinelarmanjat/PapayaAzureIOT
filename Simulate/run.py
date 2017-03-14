@@ -12,11 +12,11 @@ from iothub import iothub
 AVG_WINDSPEED = 10 # m/s
 AVG_POWEROUTPUT = 800 #kW
 
-devices = iothub.list_devices()
-print devices
-for id, pk in devices:
+response, _code = iothub.list_devices()
+devices = json.loads(response)
+for device in devices:
     currWindSpeed = AVG_WINDSPEED + random.random() * 4 - 2
     currPowerOutput = AVG_POWEROUTPUT + random.random() * 200 - 100
     now = "%s" % datetime.datetime.now()
-    event = {"deviceId": id, "windSpeed": currWindSpeed, "powerOutput": currPowerOutput, "eventDate": now}
+    event = {"deviceId": device["deviceId"], "windSpeed": currWindSpeed, "powerOutput": currPowerOutput, "eventDate": now}
     iothub.emit_message(id, json.dumps(event))
