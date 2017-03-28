@@ -4,8 +4,8 @@
       "name": "inputMessage",
       "type": "serviceBusTrigger",
       "direction": "in",
-      "queueName": "mueken-queue",
-      "connection": "muekensb",
+      "queueName": "papayaqueue",
+      "connection": "papaySb",
       "accessRights": "Listen"
     }
   ],

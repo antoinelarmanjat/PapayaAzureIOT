@@ -23,4 +23,4 @@ class Repository:
     def insert(self, deviceId, deviceDetails):
         return self.client.CreateDocument(self.COLLECTION, deviceDetails)
 
-repository = Repository(os.environ["docDBHost"], os.environ["docDBKey"])
+repository = Repository(os.environ["papayaDb"], os.environ["papapyaDbKey"])
