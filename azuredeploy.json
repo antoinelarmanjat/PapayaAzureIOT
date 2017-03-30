@@ -29,7 +29,7 @@
     "sbVersion": "2015-08-01",
     "sbName": "[concat(parameters('solutionName'),'sb')]",
     "sbQName": "papayaqueue",
-    "sbQueuePolicyName": "sbqueuePolicy",
+    "sbQueuePolicyName": "Listen",
     "sbQueueRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/queues/authorizationRules', variables('sbName'), variables('sbQName'), variables('sbQueuePolicyName'))]",
     "sbRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('sbName'), 'RootManageSharedAccessKey')]",
     "saVersion": "2015-10-01",
@@ -187,8 +187,7 @@
               ],
               "properties": {
                 "Rights": [
-                  "Listen",
-                  "Send"
+                  "Listen"
                 ]
               }
             }
