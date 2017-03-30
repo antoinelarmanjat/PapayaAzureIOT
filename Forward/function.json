@@ -5,7 +5,7 @@
       "type": "serviceBusTrigger",
       "direction": "in",
       "queueName": "papayaqueue",
-      "connection": "papaySb",
+      "connection": "PAPAYA_SB",
       "accessRights": "Listen"
     }
   ],
