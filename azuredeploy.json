@@ -1,0 +1,334 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "solutionName": {
+      "type": "string",
+      "maxLength": 12,
+      "metadata": {
+        "description": "Prefix for all resources that are going to be deployed"
+      }
+    },
+    "iotHubSku": {
+      "type": "string",
+      "allowedValues": [
+        "F1",
+        "S1",
+        "S2"
+      ],
+      "defaultValue": "S1",
+      "metadata": {
+        "description": "The tier for the Azure IoT Hub"
+      }
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "docDbApiVersion": "2015-04-08",
+    "docDbName": "[concat(parameters('solutionName'),'db')]",
+    "sbVersion": "2015-08-01",
+    "sbName": "[concat(parameters('solutionName'),'sb')]",
+    "sbQName": "papayaqueue",
+    "sbQueuePolicyName": "PapayaQueuePolicy",
+    "sbQueueRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/queues/authorizationRules', variables('sbName'), variables('sbQName'), variables('sbQueuePolicyName'))]",
+    "sbRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('sbName'), 'RootManageSharedAccessKey')]",
+    "saVersion": "2015-10-01",
+    "saName": "[concat(parameters('solutionName'), 'stream')]",
+    "iotHubVersion": "2016-02-03",
+    "iotHubTier": "Standard",
+    "iotHubName": "[concat(parameters('solutionName'), 'hub')]",
+    "iotHubKeyName": "iothubowner",
+    "iotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('iotHubKeyName'))]",
+    "iotHubResourceId": "[resourceId('Microsoft.Devices/Iothubs', variables('iotHubName'))]",
+    "iotConsGroupName": "papayacg",
+    "funcName": "[concat(parameters('solutionName'),'funct')]",
+    "funcApiVersion": "2015-08-01",
+    "funcStorageAccountName": "[concat(parameters('solutionName'),'funct','sa')]",
+    "funcHostingPlanName": "[concat(parameters('solutionName'), 'asp')]",
+    "funcStorageAccountType": "Standard_LRS",
+    "funcSku": "Standard",
+    "funcWorkerSize": "0"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "GlobalDocumentDB",
+      "name": "[variables('docDbName')]",
+      "apiVersion": "[variables('docDbApiVersion')]",
+      "location": "[variables('location')]",
+      "tags": {},
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "name": "[variables('docDbName')]"
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('funcStorageAccountName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[variables('funcStorageAccountType')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2015-04-01",
+      "name": "[variables('funcHostingPlanName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "name": "[variables('funcHostingPlanName')]",
+        "sku": "[variables('funcSku')]",
+        "workerSize": "[variables('funcWorkerSize')]",
+        "hostingEnvironment": "",
+        "numberOfWorkers": 1
+      }
+    },
+    {
+      "apiVersion": "[variables('funcApiVersion')]",
+      "type": "Microsoft.Web/sites",
+      "name": "[variables('funcName')]",
+      "location": "[variables('location')]",
+      "kind": "functionapp",
+      "properties": {
+        "name": "[variables('funcName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('funcHostingPlanName'))]",
+        "hostingEnvironment": "",
+        "clientAffinityEnabled": false,
+        "siteConfig": {
+          "alwaysOn": true,
+          "cors": {
+            "allowedOrigins": [
+              "*"
+            ]
+          },
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~1"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('funcStorageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('funcStorageAccountName')), '2015-05-01-preview').key1,';')]"
+            },
+            {
+              "name": "AzureWebJobsDashboard",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('funcStorageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('funcStorageAccountName')), '2015-05-01-preview').key1,';')]"
+            },
+            {
+              "name": "PAPAYA_SB",
+              "value": "[listkeys(variables('sbRuleResourceId'), variables('sbVersion')).primaryConnectionString]"
+            },
+            {
+              "name": "PAPAYA_DOCDB_HOST",
+              "value": "[concat('https://',parameters('solutionName'),'db','.documents.azure.com:443/')]"
+            },
+            {
+              "name": "PAPAYA_DOCDB_KEY",
+              "value": "[listkeys(variables('docDbName'), variables('docDbApiVersion')).primaryMasterKey]"
+            },
+            {
+              "name": "PAPAYA_IOTHUB_HOST",
+              "value": "[reference(variables('iotHubResourceId')).hostName]"
+            },
+            {
+              "name": "PAPAYA_IOTHUB_KEY_NAME",
+              "value": "[variables('iotHubKeyName')]"
+            },
+            {
+              "name": "PAPAYA_IOTHUB_KEY_VALUE",
+              "value": "[listkeys(variables('iotHubKeyResource'), variables('iotHubVersion')).primaryKey]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('funcHostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('funcStorageAccountName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('docDbName'))]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', variables('sbName'))]",
+        "[resourceId('Microsoft.Devices/Iothubs', variables('iotHubName'))]",
+        "[resourceId('Microsoft.StreamAnalytics/streamingjobs', variables('saName'))]"
+      ]
+    },
+    {
+      "apiVersion": "[variables('sbVersion')]",
+      "name": "[variables('sbName')]",
+      "type": "Microsoft.ServiceBus/namespaces",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Standard",
+        "tier": "Standard"
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('sbVersion')]",
+          "name": "[variables('sbQName')]",
+          "type": "Queues",
+          "dependsOn": [
+            "[concat('Microsoft.ServiceBus/namespaces/', variables('sbName'))]"
+          ],
+          "properties": {
+            "path": "[variables('sbQName')]"
+          },
+          "resources": [
+            {
+              "apiVersion": "[variables('sbVersion')]",
+              "name": "[variables('sbQueuePolicyName')]",
+              "type": "authorizationRules",
+              "dependsOn": [
+                "[variables('sbQName')]"
+              ],
+              "properties": {
+                "Rights": [
+                  "Listen",
+                  "Send"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "[variables('iotHubVersion')]",
+      "type": "Microsoft.Devices/Iothubs",
+      "name": "[variables('iotHubName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "[parameters('iotHubSku')]",
+        "tier": "[variables('iotHubTier')]",
+        "capacity": 1
+      },
+      "properties": {
+        "location": "[variables('location')]"
+      },
+      "tags": {
+        "displayName": "IoTHub"
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('iotHubVersion')]",
+          "name": "[concat(variables('iotHubName'), '/events/', variables('iotConsGroupName'))]",
+          "type": "Microsoft.Devices/Iothubs/eventhubEndpoints/ConsumerGroups",
+          "dependsOn": [
+            "[concat('Microsoft.Devices/Iothubs/', variables('iotHubName'))]"
+          ],
+          "tags": {
+            "displayName": "Stream Analytics Consumer Group"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "[variables('saVersion')]",
+      "type": "Microsoft.StreamAnalytics/streamingjobs",
+      "name": "[variables('saName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Devices/Iothubs/', variables('iotHubName'))]",
+        "[concat('Microsoft.ServiceBus/namespaces/', variables('sbName'))]"
+      ],
+      "tags": {
+        "displayName": "Stream Analytics Job"
+      },
+      "properties": {
+        "sku": {
+          "name": "standard"
+        },
+        "EventsOutOfOrderMaxDelayInSeconds": 10,
+        "EventsOutOfOrderPolicy": "adjust",
+        "outputStartMode": "JobStartTime",
+        "outputStartTime": null,
+        "Inputs": [
+          {
+            "Name": "iot-input",
+            "Properties": {
+              "DataSource": {
+                "Properties": {
+                  "consumerGroupName": "[variables('iotConsGroupName')]",
+                  "iotHubNamespace": "[variables('iotHubName')]",
+                  "sharedAccessPolicyKey": "[listkeys(variables('iotHubKeyResource'), variables('iotHubVersion')).primaryKey]",
+                  "sharedAccessPolicyName": "[variables('iotHubKeyName')]"
+                },
+                "Type": "Microsoft.Devices/IotHubs"
+              },
+              "Serialization": {
+                "Properties": {
+                  "Encoding": "UTF8"
+                },
+                "Type": "Json"
+              },
+              "Type": "Stream"
+            }
+          }
+        ],
+        "Outputs": [
+          {
+            "Name": "iot-output",
+            "dependsOn": [
+              "[resourceId('Microsoft.ServiceBus/namespaces/queues/authorizationRules', variables('sbName'), variables('sbQName'), variables('sbQueuePolicyName'))]"
+            ],
+            "Properties": {
+              "DataSource": {
+                "type": "Microsoft.ServiceBus/Queue",
+                "properties": {
+                  "serviceBusNamespace": "[variables('sbName')]",
+                  "sharedAccessPolicyName": "[variables('sbQueuePolicyName')]",
+                  "sharedAccessPolicyKey": "[listkeys(variables('sbQueueRuleResourceId'), variables('sbVersion')).primaryKey]",
+                  "queueName": "[variables('sbQName')]"
+                }
+              },
+              "Serialization": {
+                "Properties": {
+                  "Encoding": "UTF8",
+                  "Format": "Array"
+                },
+                "Type": "Json"
+              }
+            }
+          }
+        ],
+        "Transformation": {
+          "Name": "AllToBlob",
+          "Properties": {
+            "query": "SELECT\r\n     [deviceId],\r\n     SUM(powerOutput) AS [TotalPowerOutput],\r\n     AVG(windSpeed) AS [AverageWindSpeed],\r\n     System.Timestamp AS [eventDate]\r\n INTO\r\n     [iot-output]\r\n FROM \r\n     [iot-input] TIMESTAMP BY [eventDate]\r\n GROUP BY\r\n     [deviceId],\r\n     TumblingWindow (mi, 1)\r\n",
+            "StreamingUnits": 1
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "registrationConnectionString": {
+      "type": "string",
+      "value": "[concat('HostName=', reference(variables('iotHubResourceId')).hostName, ';SharedAccessKeyName=', variables('iotHubKeyName'), ';SharedAccessKey=', listkeys(variables('iotHubKeyResource'), variables('iotHubVersion')).primaryKey)]"
+    },
+    "documentDBHost": {
+      "type": "string",
+      "value": "[concat('https://',parameters('solutionName'),'db','.documents.azure.com:443/')]"
+    },
+    "documentDBMasterKey": {
+      "type": "string",
+      "value": "[listkeys(variables('docDbName'), variables('docDbApiVersion')).primaryMasterKey]"
+    },
+    "sbusname": {
+      "type": "string",
+      "value": "[variables('sbName')]"
+    },
+    "sbuskey": {
+      "type": "string",
+      "value": "[listkeys(variables('sbRuleResourceId'), variables('sbVersion')).primaryKey]"
+    },
+    "sbusqueuename": {
+      "type": "string",
+      "value": "[variables('sbQName')]"
+    }
+  }
+}

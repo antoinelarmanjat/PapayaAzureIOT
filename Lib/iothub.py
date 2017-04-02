@@ -61,4 +61,5 @@ class IoTHub:
         return r.text, r.status_code
 
 
-iothub = IoTHub(os.environ["iotHost"], os.environ["iotKeyName"], os.environ["iotKey"])
+iothub = IoTHub(os.environ["PAPAYA_IOTHUB_HOST"], os.environ["PAPAYA_IOTHUB_KEY_NAME"],
+                os.environ["PAPAYA_IOTHUB_KEY_VALUE"])

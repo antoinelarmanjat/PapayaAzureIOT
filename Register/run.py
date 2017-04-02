@@ -21,7 +21,8 @@ rtext, rcode = iothub.add_device(did)
 print "The Azure IoTHub responded with %s" % rtext
 # then inform Papaya about the device
 print "Informing Papaya about the new device and passing the payer/payee details"
-pid, ptk = papaya.register(did, details["devicePublicKey"], details["payerId"], details["payeeId"], details["payeeToken"])
+pid, ptk = papaya.register(did, details["devicePublicKey"], details["manufacturerId"],
+                           details["payerId"], details["payeeId"], details["payeeToken"])
 print "Papaya returned id %s" % pid
 # extend the device details with Papaya & Azure ids
 details["deviceId"] = did
