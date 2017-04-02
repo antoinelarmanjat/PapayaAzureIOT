@@ -29,7 +29,7 @@
     "sbVersion": "2015-08-01",
     "sbName": "[concat(parameters('solutionName'),'sb')]",
     "sbQName": "papayaqueue",
-    "sbQueuePolicyName": "Listen",
+    "sbQueuePolicyName": "PapayaQueuePolicy",
     "sbQueueRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/queues/authorizationRules', variables('sbName'), variables('sbQName'), variables('sbQueuePolicyName'))]",
     "sbRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('sbName'), 'RootManageSharedAccessKey')]",
     "saVersion": "2015-10-01",
@@ -187,7 +187,8 @@
               ],
               "properties": {
                 "Rights": [
-                  "Listen"
+                  "Listen",
+                  "Send"
                 ]
               }
             }
@@ -297,7 +298,7 @@
         "Transformation": {
           "Name": "AllToBlob",
           "Properties": {
-            "query": "SELECT\r\n    *\r\nINTO\r\n    [iot-output]\r\nFROM\r\n    [iot-input]",
+            "query": "SELECT\r\n     [deviceId],\r\n     SUM(powerOutput) AS [TotalPowerOutput],\r\n     AVG(windSpeed) AS [AverageWindSpeed],\r\n     System.Timestamp AS [eventDate]\r\n INTO\r\n     [iot-output]\r\n FROM \r\n     [iot-input] TIMESTAMP BY [eventDate]\r\n GROUP BY\r\n     [deviceId],\r\n     TumblingWindow (mi, 1)\r\n",
             "StreamingUnits": 1
           }
         }
