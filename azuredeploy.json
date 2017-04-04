@@ -42,7 +42,7 @@
     "iotHubResourceId": "[resourceId('Microsoft.Devices/Iothubs', variables('iotHubName'))]",
     "iotConsGroupName": "papayacg",
     "funcName": "[concat(parameters('solutionName'),'funct')]",
-    "funcApiVersion": "2015-08-01",
+    "funcApiVersion": "2016-08-01",
     "funcStorageAccountName": "[concat(parameters('solutionName'),'funct','sa')]",
     "funcHostingPlanName": "[concat(parameters('solutionName'), 'asp')]",
     "funcStorageAccountType": "Standard_LRS",
@@ -108,6 +108,13 @@
               "*"
             ]
           },
+          "handlerMappings": [
+            {
+              "arguments": "D:\\home\\Python27\\wfastcgi.py",
+              "extension": "fastCgi",
+              "scriptProcessor": "D:\\home\\Python27\\python.exe"
+            }
+          ],
           "appSettings": [
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -155,6 +162,17 @@
         "[resourceId('Microsoft.ServiceBus/namespaces', variables('sbName'))]",
         "[resourceId('Microsoft.Devices/Iothubs', variables('iotHubName'))]",
         "[resourceId('Microsoft.StreamAnalytics/streamingjobs', variables('saName'))]"
+      ],
+      "resources": [
+        {
+          "apiVersion": "[variables('funcApiVersion')]",
+          "name": "python2713x64",
+          "type": "siteextensions",
+          "properties": {},
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('funcName'))]"
+          ]
+        }
       ]
     },
     {
