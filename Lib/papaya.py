@@ -1,8 +1,7 @@
-# adding the virtual env path, must be done before the libraries are imported
-import envsetup
-
 import json
+
 import requests
+
 
 class Papaya:
     def __init__(self):

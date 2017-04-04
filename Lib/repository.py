@@ -1,10 +1,7 @@
-# adding the virtual env path, must be done before the libraries are imported
-import envsetup
-
 import os
 
-import pydocumentdb.documents as documents
 import pydocumentdb.document_client as document_client
+import pydocumentdb.documents as documents
 
 class Repository:
     DB_NAME = "devices"
