@@ -48,6 +48,7 @@
     "funcStorageAccountType": "Standard_LRS",
     "funcSku": "Standard",
     "funcWorkerSize": "0",
+    "pythonExtension": "python2713x64",
     "repoUrl": "https://github.com/antoinelarmanjat/PapayaAzureIOT.git",
     "repoBranch": "master"
   },
@@ -168,7 +169,7 @@
       "resources": [
         {
           "apiVersion": "[variables('funcApiVersion')]",
-          "name": "python2713x64",
+          "name": "[variables('pythonExtension')]",
           "type": "siteextensions",
           "properties": {},
           "dependsOn": [
@@ -185,7 +186,8 @@
             "isManualIntegration": true
           },
           "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('funcName'))]"
+            "[resourceId('Microsoft.Web/sites', variables('funcName'))]",
+            "[resourceId('Microsoft.Web/sites/siteextensions', variables('funcName'), variables('pythonExtension'))]"
           ]
         }
       ]
