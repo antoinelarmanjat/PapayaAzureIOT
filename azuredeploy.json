@@ -47,7 +47,9 @@
     "funcHostingPlanName": "[concat(parameters('solutionName'), 'asp')]",
     "funcStorageAccountType": "Standard_LRS",
     "funcSku": "Standard",
-    "funcWorkerSize": "0"
+    "funcWorkerSize": "0",
+    "repoUrl": "https://github.com/antoinelarmanjat/PapayaAzureIOT.git",
+    "repoBranch": "master"
   },
   "resources": [
     {
@@ -169,6 +171,19 @@
           "name": "python2713x64",
           "type": "siteextensions",
           "properties": {},
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('funcName'))]"
+          ]
+        },
+        {
+          "name": "web",
+          "type": "sourcecontrols",
+          "apiVersion": "2015-08-01",
+          "properties": {
+            "repoUrl": "[variables('repoUrl')]",
+            "branch": "[variables('repoBranch')]",
+            "isManualIntegration": true
+          },
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('funcName'))]"
           ]
